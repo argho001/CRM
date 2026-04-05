@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password_hash String
+  role          String         @default("member") // "admin" or "member"
+  created_at    DateTime       @default(now())
+
+  // Relations
+  handled_leads Lead[]         @relation("LeadHandler")
+  search_logs   SearchLog[]
+  lead_updates  LeadUpdate[]
+}
+
+model Lead {
+  id              String         @id @default(uuid())
+  business_name   String
+  phone           String?
+  email           String?
+  whatsapp        String?
+  address         String?
+  platform        String         // "google", "facebook", "linkedin"
+  category        String?
+  has_website     Boolean        @default(false)
+  website_url     String?
+  followers_count Int            @default(0)
+  rating          Float          @default(0)
+  score           Int            @default(0)
+  status          String         @default("new") // "new", "done", "cancelled"
+  response_status String         @default("not_contacted") // "not_contacted", "no_response", "replied", "not_interested", "interested", "proposal_sent", "converted", "follow_up"
+  
+  handled_by      String?
+  handledBy       User?          @relation("LeadHandler", fields: [handled_by], references: [id])
+  handled_at      DateTime?
+  created_at      DateTime       @default(now())
+
+  // Relations
+  updates         LeadUpdate[]
+}
+
+model SearchLog {
+  id           String    @id @default(uuid())
+  searched_by  String
+  user         User      @relation(fields: [searched_by], references: [id])
+  keyword      String
+  location     String
+  platform     String
+  result_count Int       @default(0)
+  searched_at  DateTime  @default(now())
+}
+
+model LeadUpdate {
+  id            String    @id @default(uuid())
+  lead_id       String
+  lead          Lead      @relation(fields: [lead_id], references: [id])
+  updated_by    String
+  user          User      @relation(fields: [updated_by], references: [id])
+  old_status    String
+  new_status    String
+  note          String?
+  updated_at    DateTime  @default(now())
+}
