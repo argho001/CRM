@@ -108,12 +108,12 @@ app.post('/api/leads', async (req, res) => {
     }
 
     // Build smart duplicate check filter
-    // Standardize: Name check (case-insensitive)
-    let orFilter = `business_name.ilike.${business_name}`;
+    // Standardize: Name check (case-insensitive) - ESCAPE COMMAS and reserved chars with double quotes
+    let orFilter = `business_name.ilike."${business_name.replace(/"/g, '\\"')}"`;
     
     // Only check phone if it looks like a real number (at least 5 digits/chars)
     if (phone && phone.length >= 5) {
-      orFilter += `,phone.eq.${phone}`;
+      orFilter += `,phone.eq."${phone.replace(/"/g, '\\"')}"`;
     }
 
     // Duplicate Check
@@ -142,14 +142,28 @@ app.post('/api/leads', async (req, res) => {
     score += 10;
     if (data.rating < 3.5) score += 5;
 
+    // SANITIZE: Only send fields that exist in the database schema
+    const cleanData = {
+      business_name,
+      phone,
+      email: data.email || null,
+      whatsapp: data.whatsapp || null,
+      address: data.address || null,
+      platform: data.platform || 'google',
+      category: data.category || null,
+      has_website: !!data.has_website,
+      website_url: data.website_url || null,
+      map_url: data.map_url || null,
+      followers_count: parseInt(data.followers_count) || 0,
+      rating: parseFloat(data.rating) || 0,
+      review_count: parseInt(data.review_count) || 0,
+      last_review_days_ago: parseInt(data.last_review_days_ago) || null,
+      score: Math.min(score, 100),
+    };
+
     const { data: newLead, error: insertError } = await supabase
       .from('leads')
-      .insert({
-        ...data,
-        business_name,
-        phone,
-        score: Math.min(score, 100),
-      })
+      .insert(cleanData)
       .select()
       .single();
 
