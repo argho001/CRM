@@ -44,6 +44,8 @@ model Lead {
   handled_by      String?
   handledBy       User?          @relation("LeadHandler", fields: [handled_by], references: [id])
   handled_at      DateTime?
+  last_note       String?
+  last_contacted_at DateTime?
   created_at      DateTime       @default(now())
 
   // Relations

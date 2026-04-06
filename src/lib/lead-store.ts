@@ -26,19 +26,23 @@ export async function getNewLeads(): Promise<Lead[]> {
     .slice(0, 50);
 }
 
-export async function markLead(id: string, status: 'done' | 'cancelled', userId: string): Promise<Lead | undefined> {
+export async function updateLeadStatus(id: string, status: LeadStatus, userId: string): Promise<Lead | undefined> {
   try {
     const res = await fetch(`${API_BASE}/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status, handled_by: userId }),
     });
-    if (!res.ok) throw new Error('Failed to mark lead');
+    if (!res.ok) throw new Error('Failed to update lead status');
     return res.json();
   } catch (err) {
     console.error(err);
     return undefined;
   }
+}
+
+export async function markLead(id: string, status: 'done' | 'cancelled', userId: string): Promise<Lead | undefined> {
+  return updateLeadStatus(id, status as LeadStatus, userId);
 }
 
 export async function restoreLead(id: string): Promise<Lead | undefined> {
@@ -71,7 +75,26 @@ export async function updateResponseStatus(id: string, newStatus: ResponseStatus
   }
 }
 
-export async function addLead(lead: Omit<Lead, 'id' | 'score' | 'status' | 'response_status' | 'handled_by' | 'handled_at' | 'created_at'>): Promise<{ success: boolean; data?: Lead; duplicate?: boolean; error?: string }> {
+export async function saveLeadNote(id: string, note: string, userId: string): Promise<Lead | undefined> {
+  try {
+    const res = await fetch(`${API_BASE}/leads/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        last_note: note, 
+        last_contacted_at: new Date().toISOString(),
+        handled_by: userId
+      }),
+    });
+    if (!res.ok) throw new Error('Failed to save lead note');
+    return res.json();
+  } catch (err) {
+    console.error(err);
+    return undefined;
+  }
+}
+
+export async function addLead(lead: Omit<Lead, 'id' | 'score' | 'status' | 'response_status' | 'handled_by' | 'handled_at' | 'created_at'>): Promise<{ success: boolean; data?: Lead; duplicate?: boolean; updated?: boolean; error?: string }> {
   try {
     const res = await fetch(`${API_BASE}/leads`, {
       method: 'POST',
@@ -86,7 +109,7 @@ export async function addLead(lead: Omit<Lead, 'id' | 'score' | 'status' | 'resp
     }
     
     const data = await res.json();
-    return { success: true, data };
+    return { success: true, data, updated: res.status === 200 };
   } catch (err: any) {
     console.error(err);
     return { success: false, error: err.message };
@@ -110,4 +133,15 @@ export function downloadCSV(csv: string, filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+export async function getActivityHistory(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/history`);
+    if (!res.ok) throw new Error('Failed to fetch history');
+    return res.json();
+  } catch (err) {
+    console.error('[History Store Error]:', err);
+    return [];
+  }
 }

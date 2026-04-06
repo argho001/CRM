@@ -11,26 +11,31 @@ const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function checkDB() {
-  console.log('Checking Supabase Database...');
-  const { data, count, error } = await supabase
+async function testQuery() {
+  const { data, error } = await supabase
     .from('leads')
-    .select('*', { count: 'exact' });
+    .select('id, business_name, phone, email, whatsapp, address, platform, category, has_website, website_url, map_url, followers_count, rating, review_count, last_review_days_ago, score, status, response_status, handled_by, handled_at, created_at')
+    .limit(1);
 
   if (error) {
-    console.error('Error:', error);
-    return;
-  }
-
-  console.log(`Total Leads in Database: ${count}`);
-  if (data && data.length > 0) {
-    console.log('First 3 leads:');
-    data.slice(0, 3).forEach(l => {
-      console.log(`- ${l.business_name} (${l.phone || 'No Phone'})`);
-    });
+    console.log('QUERY FAILED:', error);
   } else {
-    console.log('Database is EMPTY.');
+    console.log('QUERY SUCCEEDED:', data);
+  }
+  
+  // Test Update
+  const { data: updateData, error: updateError } = await supabase
+    .from('leads')
+    .update({ handled_by: 'test-user' })
+    .eq('id', '055fa437-d0e8-46c2-9749-87e4fbbec163')
+    .select('id, business_name')
+    .single();
+    
+  if (updateError) {
+    console.log('UPDATE FAILED:', updateError);
+  } else {
+    console.log('UPDATE SUCCEEDED:', updateData);
   }
 }
 
-checkDB();
+testQuery();

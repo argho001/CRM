@@ -9,10 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Download, CheckCircle2, Loader2 } from 'lucide-react';
+import { Download, Wrench, Loader2 } from 'lucide-react';
 import { Lead, ResponseStatus, RESPONSE_STATUS_CONFIG } from '@/types/crm';
 
-export default function DonePage() {
+export default function WorkingPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -28,7 +28,7 @@ export default function DonePage() {
 
   const refreshLeads = async () => {
     setLoading(true);
-    const data = await getLeadsByStatus('done');
+    const data = await getLeadsByStatus('working');
     setLeads(data);
     setLoading(false);
   };
@@ -59,7 +59,7 @@ export default function DonePage() {
 
   const handleExport = () => {
     const csv = exportToCSV(filtered);
-    downloadCSV(csv, 'done-leads.csv');
+    downloadCSV(csv, 'working-leads.csv');
     toast.success('Exported to CSV');
   };
 
@@ -67,8 +67,8 @@ export default function DonePage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><CheckCircle2 className="h-6 w-6 text-success" />Done Leads</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} leads marked as done</p>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Wrench className="h-6 w-6 text-warning" />Working Stage</h1>
+          <p className="text-sm text-muted-foreground">{filtered.length} leads currently in progress</p>
         </div>
         <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-3 w-3 mr-1" />Export CSV</Button>
       </div>
@@ -98,7 +98,7 @@ export default function DonePage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
           <Loader2 className="h-10 w-10 text-primary animate-spin" />
-          <p className="text-sm text-muted-foreground">Fetching leads from database...</p>
+          <p className="text-sm text-muted-foreground">Fetching leads...</p>
         </div>
       ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -113,10 +113,10 @@ export default function DonePage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 text-muted-foreground">
-          <CheckCircle2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
-          <p className="text-lg font-medium">No done leads yet</p>
-          <p className="text-sm">Mark leads as Done from the Search page</p>
+        <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-2xl">
+          <Wrench className="h-12 w-12 mx-auto mb-4 opacity-30" />
+          <p className="text-lg font-medium">No leads in Working stage</p>
+          <p className="text-sm">Move leads here from the Demo section</p>
         </div>
       )}
 
@@ -137,7 +137,7 @@ export default function DonePage() {
             </div>
             <div>
               <Label>Note (optional)</Label>
-              <Textarea value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Said call back Monday" />
+              <Textarea value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Started project implementation" />
             </div>
             <Button onClick={handleResponseUpdate} className="w-full">Update Status</Button>
           </div>

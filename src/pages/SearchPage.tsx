@@ -108,6 +108,41 @@ export default function SearchPage() {
     toast.success('Lead added successfully');
   };
 
+  const parseCSVLine = (line: string) => {
+    const result = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(cur.trim());
+            cur = '';
+        } else {
+            cur += char;
+        }
+    }
+    result.push(cur.trim());
+    return result;
+  };
+
+  const isValidUrl = (url: string) => {
+    if (!url) return false;
+    // Basic check: must contain a dot and not contain spaces or emojis in typical places
+    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
+    return urlPattern.test(url.trim());
+  };
+
+  const normalizeUrl = (url: string) => {
+    let trimmed = url.trim();
+    if (!trimmed) return '';
+    if (!trimmed.startsWith('http')) {
+      return `https://${trimmed}`;
+    }
+    return trimmed;
+  };
+
   const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -121,33 +156,40 @@ export default function SearchPage() {
       setImportProgress(0);
       
       let count = 0;
+      let updated = 0;
       let skipped = 0;
       let errors = 0;
       let total = lines.length;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        const cols = line.split(',');
+        const cols = parseCSVLine(line);
         if (cols.length >= 1) {
-          const website_url = cols[8]?.trim() || '';
+          const rawWebsite = cols[8] || '';
+          const isUrl = isValidUrl(rawWebsite);
+          const website_url = isUrl ? normalizeUrl(rawWebsite) : '';
+          
           const response = await addLead({
-            business_name: cols[0]?.trim() || '',
-            phone: cols[1]?.trim() || '',
-            email: cols[2]?.trim() || '',
-            whatsapp: cols[3]?.trim() || '',
-            address: cols[4]?.trim() || '',
-            platform: (cols[5]?.trim() as Platform) || 'google',
-            category: cols[6]?.trim() || '',
-            has_website: website_url ? true : false,
+            business_name: cols[0]?.replace(/^"|"$/g, '') || '',
+            phone: cols[1] || '',
+            email: cols[2] || '',
+            whatsapp: cols[3] || '',
+            address: cols[4]?.replace(/^"|"$/g, '') || '',
+            platform: (cols[5] as Platform) || 'google',
+            category: cols[6] || '',
+            has_website: isUrl,
             website_url: website_url,
             map_url: '',
-            followers_count: parseInt(cols[9]?.trim()) || 0,
-            rating: parseFloat(cols[10]?.trim()) || 0,
+            followers_count: parseInt(cols[9]) || 0,
+            rating: parseFloat(cols[10]) || 0,
             review_count: 0,
             last_review_days_ago: null,
           });
           
-          if (response.success) count++;
+          if (response.success) {
+            if (response.updated) updated++;
+            else count++;
+          }
           else if (response.duplicate) skipped++;
           else {
             console.error('Import Row Error:', response.error);
@@ -165,8 +207,8 @@ export default function SearchPage() {
         toast.error(`Import finished with ${errors} server errors. Check console.`);
       }
 
-      if (count > 0 || skipped > 0) {
-        toast.info(`Import Result: ${count} added, ${skipped} duplicates skipped.`);
+      if (count > 0 || updated > 0 || skipped > 0) {
+        toast.info(`Import Result: ${count} added, ${updated} updated, ${skipped} duplicates skipped.`);
       }
     };
     reader.readAsText(file);

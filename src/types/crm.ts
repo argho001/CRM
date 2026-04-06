@@ -1,5 +1,5 @@
 export type Platform = 'google' | 'facebook' | 'linkedin';
-export type LeadStatus = 'new' | 'done' | 'cancelled';
+export type LeadStatus = 'new' | 'done' | 'demo' | 'working' | 'testing' | 'completed' | 'cancelled';
 export type UserRole = 'admin' | 'member';
 export type ResponseStatus =
   | 'not_contacted'
@@ -32,6 +32,8 @@ export interface Lead {
   response_status: ResponseStatus;
   handled_by: string | null;
   handled_at: string | null;
+  last_note: string | null;
+  last_contacted_at: string | null;
   created_at: string;
 }
 

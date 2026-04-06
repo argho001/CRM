@@ -14,6 +14,10 @@ import CancelledPage from "@/pages/CancelledPage";
 import HistoryPage from "@/pages/HistoryPage";
 import TeamPage from "@/pages/TeamPage";
 import SettingsPage from "@/pages/SettingsPage";
+import DemoPage from "@/pages/DemoPage";
+import WorkingPage from "@/pages/WorkingPage";
+import TestingPage from "@/pages/TestingPage";
+import CompletedPage from "@/pages/CompletedPage";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -37,6 +41,10 @@ const App = () => (
                 <Route path="history" element={<HistoryPage />} />
                 <Route path="team" element={<TeamPage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="demo" element={<DemoPage />} />
+                <Route path="working" element={<WorkingPage />} />
+                <Route path="testing" element={<TestingPage />} />
+                <Route path="completed" element={<CompletedPage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

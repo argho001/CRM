@@ -1,4 +1,4 @@
-import { LayoutDashboard, Search, CheckCircle2, XCircle, History, Users, Settings, Zap, LogOut } from 'lucide-react';
+import { LayoutDashboard, Search, CheckCircle2, XCircle, History, Users, Settings, Zap, LogOut, Presentation, Wrench, Beaker, CheckSquare } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,10 @@ const mainItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Search', url: '/search', icon: Search },
   { title: 'Done', url: '/done', icon: CheckCircle2 },
+  { title: 'Demo', url: '/demo', icon: Presentation },
+  { title: 'Working', url: '/working', icon: Wrench },
+  { title: 'Testing', url: '/testing', icon: Beaker },
+  { title: 'Completed', url: '/completed', icon: CheckSquare },
   { title: 'Cancelled', url: '/cancelled', icon: XCircle },
   { title: 'History', url: '/history', icon: History },
 ];
